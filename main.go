@@ -13,16 +13,15 @@ type ProfileHeader struct {
 
 // RuleConfig contains details for individual apparmor rules
 type RuleConfig struct {
-	Value                                     string
 	Dir, Recursive, Deny, ReadOnly, OwnerOnly bool
 }
 
 // Rules contains configuration for the AppArmor Profile/SubProfile Body
 type Rules struct {
-	FilePaths         []RuleConfig
-	ProcessPaths      []RuleConfig
-	NetworkRules      []RuleConfig
-	CapabilitiesRules []RuleConfig
+	FilePaths         map[string]RuleConfig
+	ProcessPaths      map[string]RuleConfig
+	NetworkRules      map[string]RuleConfig
+	CapabilitiesRules map[string]RuleConfig
 }
 
 // FromSourceConfig has details for individual from source subprofiles
@@ -60,28 +59,28 @@ profile {{.Name}} flags=(attach_disconnected,mediate_deleted) {
   ## == PRE END == ##
 
   ## == POLICY START == ##
-{{range .FilePaths}}{{$value := .Value}}{{$suffix := ""}}{{if and .Dir .Recursive}}{{$suffix = "**"}}{{else if .Dir}}{{$suffix = "*"}}{{end}}{{if .Deny}}{{if and .ReadOnly .OwnerOnly}}
+{{range $value, $data := .FilePaths}}{{$suffix := ""}}{{if and $data.Dir $data.Recursive}}{{$suffix = "**"}}{{else if $data.Dir}}{{$suffix = "*"}}{{end}}{{if $data.Deny}}{{if and $data.ReadOnly $data.OwnerOnly}}
   deny owner {{$value}}{{$suffix}} w,
-  deny other {{$value}}{{$suffix}} rw,{{else if .OwnerOnly}}
+  deny other {{$value}}{{$suffix}} rw,{{else if $data.OwnerOnly}}
   owner {{$value}}{{$suffix}} rw,
-  deny other {{$value}}{{$suffix}} rw,{{else if .ReadOnly}}
+  deny other {{$value}}{{$suffix}} rw,{{else if $data.ReadOnly}}
   deny {{$value}}{{$suffix}} w,{{else}}
-  deny {{$value}}{{$suffix}} rw,{{end}}{{else}}{{if and .ReadOnly .OwnerOnly}}
-  owner {{$value}}{{$suffix}} r,{{else if .OwnerOnly}}
-  owner {{$value}}{{$suffix}} rw,{{else if .ReadOnly}}
+  deny {{$value}}{{$suffix}} rw,{{end}}{{else}}{{if and $data.ReadOnly $data.OwnerOnly}}
+  owner {{$value}}{{$suffix}} r,{{else if $data.OwnerOnly}}
+  owner {{$value}}{{$suffix}} rw,{{else if $data.ReadOnly}}
   {{$value}}{{$suffix}} r,{{else}}
   {{$value}}{{$suffix}} rw,
 {{end}}{{end}}{{end}}
-{{range .ProcessPaths}}{{$value := .Value}}{{$suffix := ""}}{{if and .Dir .Recursive}}{{$suffix = "**"}}{{else if .Dir}}{{$suffix = "*"}}{{end}}{{if .Deny}}{{if .OwnerOnly}}
+{{range $value, $data := .ProcessPaths}}{{$suffix := ""}}{{if and $data.Dir $data.Recursive}}{{$suffix = "**"}}{{else if $data.Dir}}{{$suffix = "*"}}{{end}}{{if $data.Deny}}{{if $data.OwnerOnly}}
   owner {{$value}}{{$suffix}} ix,
   deny other {{$value}}{{$suffix}} x,{{else}}
-  deny {{$value}}{{$suffix}} x,{{end}}{{else}}{{if .OwnerOnly}}
+  deny {{$value}}{{$suffix}} x,{{end}}{{else}}{{if $data.OwnerOnly}}
   owner {{$value}}{{$suffix}} ix,{{else}}
   {{$value}}{{$suffix}} ix,{{end}}{{end}}{{end}}
-{{range .NetworkRules}}{{$value := .Value}}{{if .Deny}}
+{{range $value, $data := .NetworkRules}}{{if $data.Deny}}
   deny network {{$value}},{{else}}
   network {{$value}},{{end}}{{end}}
-{{range .CapabilitiesRules}}{{$value := .Value}}{{if .Deny}}
+{{range $value, $data := .CapabilitiesRules}}{{if $data.Deny}}
   deny capability {{$value}},{{else}}
   capability {{$value}},
 {{end}}{{end}}
@@ -103,28 +102,28 @@ profile {{.Name}} flags=(attach_disconnected,mediate_deleted) {
     ## == PRE END == ##
   
     ## == POLICY START == ##
-  {{range .FilePaths}}{{$value := .Value}}{{$suffix := ""}}{{if and .Dir .Recursive}}{{$suffix = "**"}}{{else if .Dir}}{{$suffix = "*"}}{{end}}{{if .Deny}}{{if and .ReadOnly .OwnerOnly}}
+  {{range $value, $data := .FilePaths}}{{$suffix := ""}}{{if and $data.Dir $data.Recursive}}{{$suffix = "**"}}{{else if $data.Dir}}{{$suffix = "*"}}{{end}}{{if $data.Deny}}{{if and $data.ReadOnly $data.OwnerOnly}}
     deny owner {{$value}}{{$suffix}} w,
-    deny other {{$value}}{{$suffix}} rw,{{else if .OwnerOnly}}
+    deny other {{$value}}{{$suffix}} rw,{{else if $data.OwnerOnly}}
     owner {{$value}}{{$suffix}} rw,
-    deny other {{$value}}{{$suffix}} rw,{{else if .ReadOnly}}
+    deny other {{$value}}{{$suffix}} rw,{{else if $data.ReadOnly}}
     deny {{$value}}{{$suffix}} w,{{else}}
-    deny {{$value}}{{$suffix}} rw,{{end}}{{else}}{{if and .ReadOnly .OwnerOnly}}
-    owner {{$value}}{{$suffix}} r,{{else if .OwnerOnly}}
-    owner {{$value}}{{$suffix}} rw,{{else if .ReadOnly}}
+    deny {{$value}}{{$suffix}} rw,{{end}}{{else}}{{if and $data.ReadOnly $data.OwnerOnly}}
+    owner {{$value}}{{$suffix}} r,{{else if $data.OwnerOnly}}
+    owner {{$value}}{{$suffix}} rw,{{else if $data.ReadOnly}}
     {{$value}}{{$suffix}} r,{{else}}
     {{$value}}{{$suffix}} rw,
   {{end}}{{end}}{{end}}
-  {{range .ProcessPaths}}{{$value := .Value}}{{$suffix := ""}}{{if and .Dir .Recursive}}{{$suffix = "**"}}{{else if .Dir}}{{$suffix = "*"}}{{end}}{{if .Deny}}{{if .OwnerOnly}}
+  {{range $value, $data := .ProcessPaths}}{{$suffix := ""}}{{if and $data.Dir $data.Recursive}}{{$suffix = "**"}}{{else if $data.Dir}}{{$suffix = "*"}}{{end}}{{if $data.Deny}}{{if $data.OwnerOnly}}
     owner {{$value}}{{$suffix}} ix,
     deny other {{$value}}{{$suffix}} x,{{else}}
-    deny {{$value}}{{$suffix}} x,{{end}}{{else}}{{if .OwnerOnly}}
+    deny {{$value}}{{$suffix}} x,{{end}}{{else}}{{if $data.OwnerOnly}}
     owner {{$value}}{{$suffix}} ix,{{else}}
     {{$value}}{{$suffix}} ix,{{end}}{{end}}{{end}}
-  {{range .NetworkRules}}{{$value := .Value}}{{if .Deny}}
+  {{range $value, $data := .NetworkRules}}{{if $data.Deny}}
     deny network {{$value}},{{else}}
     network {{$value}},{{end}}{{end}}
-  {{range .CapabilitiesRules}}{{$value := .Value}}{{if .Deny}}
+  {{range $value, $data := .CapabilitiesRules}}{{if $data.Deny}}
     deny capability {{$value}},{{else}}
     capability {{$value}},
   {{end}}{{end}}
@@ -191,57 +190,45 @@ profile {{.Name}} flags=(attach_disconnected,mediate_deleted) {
 			Capabilities: true,
 		},
 		Rules: Rules{
-			FilePaths: []RuleConfig{
-				{
-					Value: "/etc/",
-					Dir:   true,
-					Deny:  true,
+			FilePaths: map[string]RuleConfig{
+				"/etc/": {
+					Dir:  true,
+					Deny: true,
 				},
-				{
-					Value:     "/var/",
+				"/var/": {
 					Dir:       true,
 					Recursive: true,
 					OwnerOnly: true,
 				},
-				{
-					Value: "/secret.txt",
-					Deny:  true,
+				"/secret.txt": {
+					Deny: true,
 				},
-				{
-					Value:    "/plain.txt",
+				"/plain.txt": {
 					Deny:     true,
 					ReadOnly: true,
 				},
-				{
-					Value:     "/config.txt",
+				"/config.txt": {
 					Deny:      true,
 					OwnerOnly: true,
 					ReadOnly:  true,
 				},
 			},
-			ProcessPaths: []RuleConfig{
-				{
-					Value:     "/bin/sleep",
+			ProcessPaths: map[string]RuleConfig{
+				"/bin/sleep": {
 					Deny:      true,
 					OwnerOnly: true,
 				},
-				{
-					Value: "/bin/ls",
-					Deny:  true,
+				"/bin/ls": {
+					Deny: true,
 				},
-				{
-					Value: "/bin/cat",
-				},
+				"/bin/cat": {},
 			},
-			NetworkRules: []RuleConfig{
-				{
-					Value: "tcp",
-				},
+			NetworkRules: map[string]RuleConfig{
+				"tcp": {},
 			},
-			CapabilitiesRules: []RuleConfig{
-				{
-					Value: "chown",
-					Deny:  true,
+			CapabilitiesRules: map[string]RuleConfig{
+				"chown": {
+					Deny: true,
 				},
 			},
 		},
@@ -254,23 +241,19 @@ profile {{.Name}} flags=(attach_disconnected,mediate_deleted) {
 					Capabilities: true,
 				},
 				Rules: Rules{
-					FilePaths: []RuleConfig{
-						{
-							Value: "/etc/",
-							Dir:   true,
-							Deny:  true,
+					FilePaths: map[string]RuleConfig{
+						"/etc/": {
+							Dir:  true,
+							Deny: true,
 						},
-						{
-							Value: "/secret.txt",
-							Deny:  true,
+						"/secret.txt": {
+							Deny: true,
 						},
-						{
-							Value:    "/plain.txt",
+						"/plain.txt": {
 							Deny:     true,
 							ReadOnly: true,
 						},
-						{
-							Value:     "/config.txt",
+						"/config.txt": {
 							Deny:      true,
 							OwnerOnly: true,
 							ReadOnly:  true,
